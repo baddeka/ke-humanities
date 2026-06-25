@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPARQL &amp; Results · Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="sparql.html" class="active">SPARQL &amp; Results</a>
+  <a href="prompts.html">Prompts &amp; LLM</a>
+  <a href="rdf.html">RDF Before/After</a>
+  <a href="graph.html">Knowledge Graph</a>
+  <a href="challenges.html">Challenges</a>
+  <a href="conclusion.html">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="page-title">SPARQL Queries &amp; Gap Results</div>
+  <div class="page-desc">
+    Four queries executed against the live Wikidata endpoint (2024-06-24).
+    Together they use: <code>DISTINCT</code> · <code>OPTIONAL</code> · <code>UNION</code> ·
+    <code>FILTER</code> · <code>REGEX</code> · <code>LIMIT</code> · <code>ORDER BY</code>
+  </div>
+
+  <div class="callout info">
+    <strong>Endpoint:</strong>
+    <code>https://query.wikidata.org/sparql</code> —
+    All queries sent via HTTP GET with
+    <code>Accept: application/sparql-results+json</code> and
+    <code>User-Agent: KEHumanities-Bologna/1.0</code>
+  </div>
+
+  <!-- ═══ Q1 ═══════════════════════════════════════════════════════════ -->
+  <h2>Q1 — Italian Painters Missing Teacher (P1066)</h2>
+  <p>
+    Identifies Italian painters (birth 1400–1560) who have <em>no</em> value for
+    property <code>P1066</code> (student of / teacher).
+    Uses <strong>DISTINCT</strong>, <strong>OPTIONAL</strong>, <strong>FILTER</strong>,
+    <strong>ORDER BY</strong>, <strong>LIMIT</strong>.
+  </p>
+
+<pre><code class="language-sparql">SELECT DISTINCT ?painter ?painterLabel ?birthYear WHERE {
+
+  ?painter wdt:P31  wd:Q5        ;   # human
+           wdt:P106 wd:Q1028181  ;   # painter (occupation)
+           wdt:P27  wd:Q38       ;   # Italian citizen
+           wdt:P569 ?birth       .
+
+  BIND(YEAR(?birth) AS ?birthYear)
+  FILTER(?birthYear >= 1400 &amp;&amp; ?birthYear &lt;= 1560)
+
+  OPTIONAL { ?painter wdt:P1066 ?teacher . }
+  FILTER(!BOUND(?teacher))           # keep only painters where P1066 is absent
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
+}
+ORDER BY ?birthYear
+LIMIT 25</code></pre>
+
+  <p><strong>Results (25 painters):</strong></p>
+  <table>
+    <tr><th>QID</th><th>Birth year</th><th>Painter</th></tr>
+    <tr><td>Q2245140</td><td>1420</td><td>Fra Carnevale</td></tr>
+    <tr><td>Q314579</td><td>1438</td><td>Melozzo da Forlì</td></tr>
+    <tr><td>Q654579</td><td>1448</td><td>Bartolomeo della Gatta</td></tr>
+    <tr><td>Q7799</td><td>1465</td><td>Bramantino</td></tr>
+    <tr><td>Q785254</td><td>1466</td><td>Bastiano Mainardi</td></tr>
+    <tr><td>Q3559930</td><td>1470</td><td>Vincenzo Civerchio</td></tr>
+    <tr><td colspan="3" style="color:#888;font-style:italic">… and 19 more — see report/gaps.md</td></tr>
+  </table>
+
+  <!-- ═══ Q2 ═══════════════════════════════════════════════════════════ -->
+  <h2>Q2 — Paintings Missing Museum / Collection (P195)</h2>
+  <p>
+    Checks paintings by our 14 target painters that have no value for
+    <code>P195</code> (collection).
+    Uses <strong>DISTINCT</strong>, <strong>OPTIONAL</strong>, <strong>FILTER</strong>, <strong>LIMIT</strong>.
+  </p>
+
+<pre><code class="language-sparql">SELECT DISTINCT ?artwork ?artworkLabel ?creator ?creatorLabel WHERE {
+
+  VALUES ?creator {
+    wd:Q762    # Leonardo da Vinci
+    wd:Q5592   # Michelangelo
+    wd:Q5597   # Raphael
+    wd:Q5669   # Sandro Botticelli
+    wd:Q47551  # Titian
+    wd:Q8537   # Bernardino Luini
+    wd:Q442528 # Giovanni Antonio Boltraffio
+    wd:Q280851 # Piero di Cosimo
+    wd:Q5827   # Pietro Perugino
+    wd:Q5591   # Pinturicchio
+    wd:Q7031   # Luca Signorelli
+    wd:Q191423 # Domenico Ghirlandaio
+    wd:Q296265 # Filippino Lippi
+    wd:Q5672   # Fra Angelico
+  }
+
+  ?artwork wdt:P170 ?creator ;        # created by
+           wdt:P31  wd:Q3305213 .     # is a painting
+
+  OPTIONAL { ?artwork wdt:P195 ?collection . }
+  FILTER(!BOUND(?collection))
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
+}
+ORDER BY ?creatorLabel ?artworkLabel
+LIMIT 40</code></pre>
+
+  <p><strong>Results (26 paintings, selected):</strong></p>
+  <table>
+    <tr><th>QID</th><th>Creator</th><th>Artwork</th></tr>
+    <tr><td>Q3877894</td><td>Michelangelo</td><td>Noli me tangere</td></tr>
+    <tr><td>Q1778000</td><td>Raphael</td><td>Baronci Altarpiece ← <strong>focus gap</strong></td></tr>
+    <tr><td>Q134547315</td><td>Raphael</td><td>Coronation of Saint Nicholas from Tolentino</td></tr>
+    <tr><td>Q117442973</td><td>Sandro Botticelli</td><td>Deer and Monkeys (reverse of Judith)</td></tr>
+    <tr><td>Q134530732</td><td>Sandro Botticelli</td><td>Profile Portrait of a Woman</td></tr>
+    <tr><td>Q3937456</td><td>Titian</td><td>Portrait of Alfonso I d'Este</td></tr>
+    <tr><td colspan="3" style="color:#888;font-style:italic">… and 20 more — see report/gaps.md</td></tr>
+  </table>
+
+  <!-- ═══ Q3 ═══════════════════════════════════════════════════════════ -->
+  <h2>Q3 — Painters Missing Art Movement (P135)</h2>
+  <p>
+    Uses <strong>UNION</strong> to capture painters who are Italian by citizenship
+    <em>or</em> by birthplace.
+    Uses <strong>DISTINCT</strong>, <strong>OPTIONAL</strong>, <strong>FILTER</strong>, <strong>LIMIT</strong>.
+  </p>
+
+<pre><code class="language-sparql">SELECT DISTINCT ?painter ?painterLabel ?birthYear WHERE {
+
+  ?painter wdt:P31  wd:Q5       ;
+           wdt:P106 wd:Q1028181 ;     # painter
+           wdt:P569 ?birth       .
+
+  # Italian = citizen OR born in Italy
+  {
+    ?painter wdt:P27 wd:Q38 .         # citizen of Italy
+  }
+  UNION
+  {
+    ?painter wdt:P19 ?birthPlace .
+    ?birthPlace wdt:P17 wd:Q38 .      # born in a place whose country = Italy
+  }
+
+  BIND(YEAR(?birth) AS ?birthYear)
+  FILTER(?birthYear >= 1420 &amp;&amp; ?birthYear &lt;= 1540)
+
+  OPTIONAL { ?painter wdt:P135 ?movement . }
+  FILTER(!BOUND(?movement))
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
+}
+ORDER BY ?birthYear
+LIMIT 20</code></pre>
+
+  <p><strong>Results (20 painters, selected):</strong></p>
+  <table>
+    <tr><th>QID</th><th>Birth year</th><th>Painter</th></tr>
+    <tr><td>Q931819</td><td>1420</td><td>Bartolomeo Caporali</td></tr>
+    <tr><td>Q2245140</td><td>1420</td><td>Fra Carnevale</td></tr>
+    <tr><td>Q472073</td><td>1425</td><td>Alesso Baldovinetti</td></tr>
+    <tr><td>Q930831</td><td>1422</td><td>Francesco Pesellino</td></tr>
+    <tr><td colspan="3" style="color:#888;font-style:italic">… and 16 more — see report/gaps.md</td></tr>
+  </table>
+
+  <!-- ═══ Q4 ═══════════════════════════════════════════════════════════ -->
+  <h2>Q4 — Targeted Cross-Check with REGEX</h2>
+  <p>
+    Filters specific painters by name pattern using <strong>REGEX</strong>, then reports
+    both <code>P1066</code> and <code>P135</code> values (or absence).
+    Uses <strong>REGEX</strong>, <strong>FILTER</strong>, <strong>DISTINCT</strong>,
+    <strong>OPTIONAL</strong>, <strong>ORDER BY</strong>, <strong>LIMIT</strong>.
+  </p>
+
+<pre><code class="language-sparql">SELECT DISTINCT ?painter ?painterLabel
+                ?teacher ?teacherLabel
+                ?movement ?movementLabel WHERE {
+
+  ?painter wdt:P31  wd:Q5       ;
+           wdt:P106 wd:Q1028181 ;
+           wdt:P27  wd:Q38      .
+
+  ?painter rdfs:label ?name .
+  FILTER(LANG(?name) = "en")
+
+  FILTER(REGEX(?name,
+    "(Luini|Boltraffio|Oggiono|Pinturicchio|Signorelli|Sodoma|Salaino|Melzi)",
+    "i"))
+
+  OPTIONAL { ?painter wdt:P1066 ?teacher . }
+  OPTIONAL { ?painter wdt:P135  ?movement . }
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
+}
+ORDER BY ?painterLabel
+LIMIT 20</code></pre>
+
+  <div class="callout warn">
+    <strong>Methodological note:</strong> This query was initially written with <code>wdt:P27 wd:Q38</code>
+    (Italian citizen) but returned zero results for Luini — Wikidata records him as
+    a Swiss citizen (born in Luino, now Switzerland). We removed the citizenship filter
+    and used the REGEX approach instead. This illustrates how Wikidata's data model
+    can differ from historical intuition.
+  </div>
+
+  <p><strong>Key results from Q4:</strong></p>
+  <table>
+    <tr><th>QID</th><th>Painter</th><th>P1066 (teacher)</th><th>P135 (movement)</th></tr>
+    <tr>
+      <td>Q8537</td><td>Bernardino Luini</td>
+      <td><span class="badge-gap">MISSING</span></td>
+      <td><span class="badge-gap">MISSING</span></td>
+    </tr>
+    <tr>
+      <td>Q442528</td><td>Giovanni Antonio Boltraffio</td>
+      <td><span class="badge-ok">Leonardo da Vinci</span></td>
+      <td><span class="badge-gap">MISSING</span></td>
+    </tr>
+    <tr>
+      <td>Q280851</td><td>Piero di Cosimo</td>
+      <td><span class="badge-ok">Cosimo Rosselli</span></td>
+      <td><span class="badge-gap">MISSING</span></td>
+    </tr>
+    <tr>
+      <td>Q5591</td><td>Pinturicchio</td>
+      <td><span class="badge-ok">Pietro Perugino</span></td>
+      <td><span class="badge-ok">Renaissance</span></td>
+    </tr>
+    <tr>
+      <td>Q7031</td><td>Luca Signorelli</td>
+      <td><span class="badge-ok">Piero della Francesca</span></td>
+      <td><span class="badge-ok">Sienese school</span></td>
+    </tr>
+    <tr>
+      <td>Q191423</td><td>Domenico Ghirlandaio</td>
+      <td><span class="badge-ok">Andrea del Verrocchio</span></td>
+      <td><span class="badge-ok">Italian Renaissance</span></td>
+    </tr>
+  </table>
+
+  <h2>Summary: Gaps Selected for LLM Prompting</h2>
+  <table>
+    <tr><th>#</th><th>Property</th><th>Item</th><th>QID</th></tr>
+    <tr>
+      <td>1</td><td><code>P1066</code> student of</td>
+      <td>Bernardino Luini</td><td>Q8537</td>
+    </tr>
+    <tr>
+      <td>2</td><td><code>P195</code> collection</td>
+      <td>Baronci Altarpiece (Raphael)</td><td>Q1778000</td>
+    </tr>
+    <tr>
+      <td>3</td><td><code>P135</code> movement</td>
+      <td>Boltraffio (Q442528) + Luini (Q8537)</td><td>—</td>
+    </tr>
+  </table>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

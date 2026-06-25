@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Graph · Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    #graph-container {
+      width: 100%;
+      height: 540px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #0d1117;
+      position: relative;
+    }
+    .graph-controls {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      margin: 1rem 0 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.5rem 1.2rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 0.88rem;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-before { background: #c0392b; color: white; }
+    .btn-after  { background: #27ae60; color: white; }
+    .btn-both   { background: #1a2744; color: #c9a84c; border: 1px solid #c9a84c; }
+    .state-indicator {
+      font-family: monospace;
+      font-size: 0.82rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 3px;
+      color: white;
+    }
+    .state-before { background: #c0392b; }
+    .state-after  { background: #27ae60; }
+    .state-both   { background: #1a2744; border: 1px solid #c9a84c; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 0.8rem 0 1.5rem;
+      font-family: sans-serif;
+      font-size: 0.82rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="sparql.html">SPARQL &amp; Results</a>
+  <a href="prompts.html">Prompts &amp; LLM</a>
+  <a href="rdf.html">RDF Before/After</a>
+  <a href="graph.html" class="active">Knowledge Graph</a>
+  <a href="challenges.html">Challenges</a>
+  <a href="conclusion.html">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="page-title">Interactive Knowledge Graph</div>
+  <div class="page-desc">
+    Visual comparison of the Wikidata knowledge graph <strong>before</strong>
+    (with gaps) and <strong>after</strong> (with proposed enrichments).
+    Drag nodes to rearrange. Scroll to zoom.
+  </div>
+
+  <div class="graph-controls">
+    <button class="btn btn-before" onclick="showState('before')">⬤ Before (gaps)</button>
+    <button class="btn btn-after"  onclick="showState('after')">⬤ After (enriched)</button>
+    <button class="btn btn-both"   onclick="showState('both')">⬤ Show both</button>
+    <span id="state-label" class="state-indicator state-before">BEFORE — missing links highlighted in red</span>
+  </div>
+
+  <div id="graph-container"></div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#4a90d9"></div>Painter (well-documented)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e67e22"></div>Painter (gaps found)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8e44ad"></div>Art movement</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#16a085"></div>Museum / collection</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c0392b;border-radius:0"></div>Artwork (with gap)</div>
+    <div class="legend-item">
+      <svg width="30" height="10"><line x1="0" y1="5" x2="30" y2="5" stroke="#c0392b" stroke-width="2" stroke-dasharray="4"/></svg>
+      Missing link (gap)
+    </div>
+    <div class="legend-item">
+      <svg width="30" height="10"><line x1="0" y1="5" x2="30" y2="5" stroke="#27ae60" stroke-width="2"/></svg>
+      Proposed new triple
+    </div>
+  </div>
+
+  <h2>What This Graph Shows</h2>
+  <p>
+    <strong>Before enrichment (red dashed lines):</strong>
+    Bernardino Luini (Q8537) and Boltraffio (Q442528) are isolated nodes —
+    they have no connection to a teacher or art movement in Wikidata.
+    The Baronci Altarpiece (Q1778000) floats without a museum link.
+  </p>
+  <p>
+    <strong>After enrichment (green solid lines):</strong>
+    LLM-proposed triples (verified against historical sources) connect the painters
+    to Leonardo da Vinci via <code>P1066</code>, to the Italian Renaissance via <code>P135</code>,
+    and the altarpiece to the Pinacoteca Vaticana via <code>P195</code>.
+  </p>
+
+  <h2>Graph Data (RDF Triples Visualised)</h2>
+  <table>
+    <tr><th>Subject</th><th>Property</th><th>Object</th><th>Status</th></tr>
+    <tr><td>Q442528 Boltraffio</td><td>P1066 student of</td><td>Q762 Leonardo</td><td><span class="badge-ok">EXISTS</span></td></tr>
+    <tr><td>Q8537 Luini</td><td>P1066 student of</td><td>Q762 Leonardo</td><td><span class="badge-gap">PROPOSED</span></td></tr>
+    <tr><td>Q8537 Luini</td><td>P135 movement</td><td>Q1404472 Italian Renaissance</td><td><span class="badge-gap">PROPOSED</span></td></tr>
+    <tr><td>Q442528 Boltraffio</td><td>P135 movement</td><td>Q1404472 Italian Renaissance</td><td><span class="badge-gap">PROPOSED</span></td></tr>
+    <tr><td>Q280851 Piero di Cosimo</td><td>P135 movement</td><td>Q1404472 Italian Renaissance</td><td><span class="badge-gap">PROPOSED</span></td></tr>
+    <tr><td>Q1778000 Baronci Altarpiece</td><td>P195 collection</td><td>Q46699 Pinacoteca Vaticana</td><td><span class="badge-gap">PROPOSED</span></td></tr>
+    <tr><td>Q5827 Perugino</td><td>P1066 student of</td><td>Q16967 Verrocchio</td><td><span class="badge-ok">EXISTS</span></td></tr>
+    <tr><td>Q5591 Pinturicchio</td><td>P1066 student of</td><td>Q5827 Perugino</td><td><span class="badge-ok">EXISTS</span></td></tr>
+  </table>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+<!-- vis-network from CDN — no build tools needed -->
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script>
+// ── NODE DEFINITIONS ──────────────────────────────────────────────────────
+var nodes_data = [
+  // painters — well documented
+  { id:'Q762',    label:'Leonardo\nda Vinci\n(Q762)',      group:'painter',    title:'Leonardo da Vinci — Italian polymath' },
+  { id:'Q5597',   label:'Raphael\n(Q5597)',               group:'painter',    title:'Raphael — Italian painter' },
+  { id:'Q16967',  label:'Andrea del\nVerrocchio\n(Q16967)',group:'painter',    title:'Andrea del Verrocchio — Florentine' },
+  { id:'Q5827',   label:'Perugino\n(Q5827)',              group:'painter',    title:'Pietro Perugino — Umbrian painter' },
+  { id:'Q5591',   label:'Pinturicchio\n(Q5591)',          group:'painter',    title:'Pinturicchio — Umbrian painter' },
+  // painters — gaps found
+  { id:'Q8537',   label:'Bernardino\nLuini\n(Q8537)',     group:'painter_gap',title:'Bernardino Luini — GAPS: P1066, P135' },
+  { id:'Q442528', label:'Boltraffio\n(Q442528)',          group:'painter_gap',title:'G.A. Boltraffio — GAP: P135' },
+  { id:'Q280851', label:'Piero di\nCosimo\n(Q280851)',    group:'painter_gap',title:'Piero di Cosimo — GAP: P135' },
+  // movements
+  { id:'Q1404472',label:'Italian\nRenaissance\n(Q1404472)',group:'movement', title:'Italian Renaissance — Q1404472' },
+  { id:'Q1474884',label:'High\nRenaissance\n(Q1474884)', group:'movement',   title:'High Renaissance — Q1474884' },
+  // museums
+  { id:'Q46699',  label:'Pinacoteca\nVaticana\n(Q46699)', group:'museum',    title:'Pinacoteca Vaticana — Vatican Museums' },
+  // artwork
+  { id:'Q1778000',label:'Baronci\nAltarpiece\n(Q1778000)',group:'artwork',   title:'Baronci Altarpiece — Raphael, 1501 — GAP: P195' },
+];
+
+// ── EDGE DEFINITIONS ──────────────────────────────────────────────────────
+// existing = solid edges shown in both states
+// proposed = dashed in "before", solid+green in "after"
+
+var edges_existing = [
+  { from:'Q442528', to:'Q762',     label:'P1066\nstudent of', arrows:'to' },
+  { from:'Q5827',   to:'Q16967',   label:'P1066\nstudent of', arrows:'to' },
+  { from:'Q5591',   to:'Q5827',    label:'P1066\nstudent of', arrows:'to' },
+  { from:'Q1778000',to:'Q5597',    label:'P170\ncreated by',  arrows:'to' },
+];
+
+var edges_proposed = [
+  { id:'e1', from:'Q8537',   to:'Q762',     label:'P1066\nstudent of', arrows:'to', _proposed:true },
+  { id:'e2', from:'Q8537',   to:'Q1404472', label:'P135\nmovement',    arrows:'to', _proposed:true },
+  { id:'e3', from:'Q442528', to:'Q1404472', label:'P135\nmovement',    arrows:'to', _proposed:true },
+  { id:'e4', from:'Q442528', to:'Q1474884', label:'P135\nmovement',    arrows:'to', _proposed:true },
+  { id:'e5', from:'Q280851', to:'Q1404472', label:'P135\nmovement',    arrows:'to', _proposed:true },
+  { id:'e6', from:'Q1778000',to:'Q46699',   label:'P195\ncollection',  arrows:'to', _proposed:true },
+];
+
+// ── NODE STYLES ───────────────────────────────────────────────────────────
+var GROUP_STYLES = {
+  painter:     { color:{ background:'#4a90d9', border:'#2c6fad' }, font:{ color:'white', size:12 }, shape:'ellipse' },
+  painter_gap: { color:{ background:'#e67e22', border:'#b96117' }, font:{ color:'white', size:12 }, shape:'ellipse' },
+  movement:    { color:{ background:'#8e44ad', border:'#6c3483' }, font:{ color:'white', size:12 }, shape:'box' },
+  museum:      { color:{ background:'#16a085', border:'#0e6b5e' }, font:{ color:'white', size:12 }, shape:'box' },
+  artwork:     { color:{ background:'#c0392b', border:'#922b21' }, font:{ color:'white', size:12 }, shape:'diamond' },
+};
+
+function applyGroupStyles(nodeList) {
+  return nodeList.map(function(n) {
+    var s = GROUP_STYLES[n.group] || {};
+    return Object.assign({}, n, s);
+  });
+}
+
+// ── EDGE STYLES ───────────────────────────────────────────────────────────
+var STYLE_EXISTING = { color:{ color:'#aaaaaa' }, width:2, dashes:false, font:{ size:10, color:'#ccc' } };
+var STYLE_GAP      = { color:{ color:'#c0392b' }, width:2, dashes:[5,5], font:{ size:10, color:'#e88' } };
+var STYLE_PROPOSED = { color:{ color:'#27ae60' }, width:2.5, dashes:false, font:{ size:10, color:'#7dcea0' } };
+
+function buildEdges(state) {
+  var result = edges_existing.map(function(e){ return Object.assign({}, e, STYLE_EXISTING); });
+  edges_proposed.forEach(function(e) {
+    var edge = Object.assign({}, e);
+    if (state === 'before') {
+      Object.assign(edge, STYLE_GAP);
+      edge.label = '? MISSING';
+    } else {
+      Object.assign(edge, STYLE_PROPOSED);
+    }
+    result.push(edge);
+  });
+  return result;
+}
+
+// ── VIS-NETWORK INIT ──────────────────────────────────────────────────────
+var container = document.getElementById('graph-container');
+var styledNodes = applyGroupStyles(nodes_data);
+
+var network = new vis.Network(container,
+  { nodes: new vis.DataSet(styledNodes),
+    edges: new vis.DataSet(buildEdges('before')) },
+  {
+    physics: { solver:'forceAtlas2Based', forceAtlas2Based:{ springLength:150, springConstant:0.05 }, stabilization:{ iterations:200 } },
+    interaction: { hover:true, tooltipDelay:200 },
+    edges: { smooth:{ type:'curvedCW', roundness:0.2 }, labelHighlightBold:false },
+    nodes: { margin:8, widthConstraint:{ maximum:120 } },
+    layout: { randomSeed:42 },
+  }
+);
+
+// ── STATE SWITCHER ────────────────────────────────────────────────────────
+function showState(state) {
+  var edgeDS = network.body.data.edges;
+  var newEdges = buildEdges(state);
+  edgeDS.clear();
+  edgeDS.add(newEdges);
+
+  var label = document.getElementById('state-label');
+  if (state === 'before') {
+    label.textContent = 'BEFORE — missing links shown as red dashed lines';
+    label.className = 'state-indicator state-before';
+  } else if (state === 'after') {
+    label.textContent = 'AFTER — proposed new triples shown in green';
+    label.className = 'state-indicator state-after';
+  } else {
+    label.textContent = 'BOTH — grey = existing, green = proposed';
+    label.className = 'state-indicator state-both';
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conclusion · Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="sparql.html">SPARQL &amp; Results</a>
+  <a href="prompts.html">Prompts &amp; LLM</a>
+  <a href="rdf.html">RDF Before/After</a>
+  <a href="graph.html">Knowledge Graph</a>
+  <a href="challenges.html">Challenges</a>
+  <a href="conclusion.html" class="active">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="page-title">Conclusion</div>
+  <div class="page-desc">Findings, LLM comparison, and directions for future work</div>
+
+  <h2>Summary of Findings</h2>
+
+  <p>
+    This project demonstrated a complete knowledge engineering pipeline for Wikidata
+    enrichment: from empirical gap discovery via SPARQL, through structured LLM prompting,
+    to validated RDF triples. The pipeline was applied to Italian Renaissance painters
+    with a focus on three structurally important properties:
+    <code>P1066</code> (student of), <code>P195</code> (collection),
+    and <code>P135</code> (movement).
+  </p>
+
+  <p>
+    SPARQL queries against the live Wikidata endpoint confirmed that gaps are systematic
+    rather than isolated: 25 Italian painters from 1400–1560 lack a teacher record,
+    26 paintings by major masters lack a museum link, and 20 painters lack an explicit
+    art movement assignment. The gaps are concentrated among lesser-known masters —
+    particularly painters active in Leonardo's Milanese circle, who are well-represented
+    in art-historical scholarship but underrepresented in structured knowledge bases.
+  </p>
+
+  <h2>LLM Performance Comparison</h2>
+
+  <table>
+    <tr>
+      <th>Criterion</th>
+      <th>Gemini 1.5 Pro</th>
+      <th>ChatGPT GPT-4o</th>
+    </tr>
+    <tr>
+      <td>P1066 factual accuracy (Luini → Leonardo)</td>
+      <td>&#10003; Correct — Q762, medium confidence</td>
+      <td>&#10003; Correct — Q762, medium confidence</td>
+    </tr>
+    <tr>
+      <td>P135 factual accuracy (Boltraffio → High Renaissance)</td>
+      <td>&#10003; Correct — Q1474884; also suggests Q1404472</td>
+      <td>&#10003; Correct — Q1474884; also suggests Q1404472</td>
+    </tr>
+    <tr>
+      <td>P195 accuracy (Baronci Altarpiece fragments)</td>
+      <td>Partial — Brescia + Lisbon correct; third fragment flagged uncertain</td>
+      <td>Partial — same institutions; third fragment marked uncertain</td>
+    </tr>
+    <tr>
+      <td>Q-ID hallucination rate</td>
+      <td><strong>Low</strong> — explicitly flags uncertain IDs, refuses to invent</td>
+      <td><strong>Medium</strong> — occasionally asserts unverified Q-IDs</td>
+    </tr>
+    <tr>
+      <td>Format compliance with prompt template</td>
+      <td>Medium — adds editorial commentary beyond requested template</td>
+      <td><strong>High</strong> — stays within template structure precisely</td>
+    </tr>
+    <tr>
+      <td>Uncertainty acknowledgement &amp; sourcing</td>
+      <td><strong>High</strong> — cites specific monographs (Agosti &amp; Stoppa 2014)</td>
+      <td>Medium — cites Vasari but fewer specific secondary sources</td>
+    </tr>
+    <tr>
+      <td>Best prompting technique</td>
+      <td>Chain-of-thought (most thorough historical reasoning)</td>
+      <td>Few-shot (clearest structured output)</td>
+    </tr>
+  </table>
+
+  <h3>Pattern observed across prompting techniques</h3>
+  <ul>
+    <li><strong>Zero-shot</strong> proved adequate for high-certainty gaps (P135 movement)
+        but insufficient for historically ambiguous cases: both models produced confident answers
+        for Luini's teacher without surfacing the scholarly debate around his training.</li>
+    <li><strong>Few-shot</strong> most improved ChatGPT's output — format compliance increased
+        noticeably when correct examples were shown (entity URIs, confidence labels).
+        Gemini was already verbose and added context regardless of examples provided.</li>
+    <li><strong>Chain-of-thought</strong> was the most valuable technique for P1066 and P195:
+        by forcing explicit reasoning steps, both models acknowledged uncertainty, named competing
+        hypotheses, and recommended verification before editing Wikidata.</li>
+  </ul>
+
+  <h2>The Core Problem: Plausible-Looking Errors</h2>
+  <p>
+    The most important finding is not which model performed better, but rather the
+    <em>category</em> of failures that both models share: all errors were
+    <strong>syntactically plausible</strong> but <strong>semantically wrong</strong>.
+    A hallucinated Q-ID like <code>wd:Q998877</code> looks exactly like a real identifier;
+    a reversed triple <code>wd:Q762 wdt:P1066 wd:Q8537</code> is grammatically correct
+    Turtle but states the opposite of the intended fact. These errors cannot be caught
+    by a Turtle parser — they require verification against the live knowledge base.
+  </p>
+  <p>
+    This implies that LLMs cannot yet be used as autonomous Wikidata editors. They are
+    useful as <em>suggestion generators</em>, but every suggestion requires a verification
+    step that currently demands human (or rule-based) effort.
+  </p>
+
+  <h2>Answer to the Research Hypothesis</h2>
+  <p>
+    The hypothesis was that chain-of-thought prompting would elicit more accurate and
+    better-justified values than zero-shot or few-shot for historically ambiguous cases.
+    The results confirm this: CoT was the only technique that consistently surfaced the
+    scholarly uncertainty around Luini's teacher (no archival apprenticeship record exists),
+    while zero-shot produced confident assertions without evidence. For P135 (art movement),
+    where the answer is unambiguous, all three techniques performed equally well — confirming
+    that CoT overhead is only justified for genuinely contested facts.
+  </p>
+
+  <h2>Future Work</h2>
+  <ul>
+    <li>
+      <strong>Extend the gap analysis</strong> to all Italian Renaissance painters in
+      Wikidata (hundreds of items), not just the 12 in this study.
+    </li>
+    <li>
+      <strong>Automated verification pipeline:</strong> after LLM suggestions are collected,
+      automatically check each proposed Q-ID via SPARQL and flag invalid ones before human review.
+    </li>
+    <li>
+      <strong>Structured output prompting:</strong> ask models to output JSON matching the
+      Wikidata API format, then validate the schema automatically. This would reduce the
+      string-vs-URI error class entirely.
+    </li>
+    <li>
+      <strong>Retrieval-Augmented Generation (RAG):</strong> supply the model with
+      relevant Wikidata entries (retrieved by SPARQL) as context, rather than relying on
+      parametric knowledge that may be stale or wrong.
+    </li>
+    <li>
+      <strong>Domain expert review:</strong> submit proposed triples (especially P1066 for
+      Luini) to an art historian for validation before submitting to Wikidata.
+    </li>
+  </ul>
+
+  <h2>Contribution</h2>
+  <p>
+    The project contributes:
+    (1) a reusable SPARQL-based gap detection framework applicable to any Wikidata domain;
+    (2) a set of 9 reusable prompt templates (zero-shot, few-shot, CoT) for Wikidata
+    enrichment tasks;
+    (3) an annotated before/after RDF file documenting 9 distinct error categories in
+    LLM-generated knowledge graph data;
+    (4) an interactive knowledge graph visualisation open-sourced via this website.
+  </p>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+</body>
+</html>

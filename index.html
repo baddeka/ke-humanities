@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enriching Wikidata: Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html" class="active">Home</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="sparql.html">SPARQL &amp; Results</a>
+  <a href="prompts.html">Prompts &amp; LLM</a>
+  <a href="rdf.html">RDF Before/After</a>
+  <a href="graph.html">Knowledge Graph</a>
+  <a href="challenges.html">Challenges</a>
+  <a href="conclusion.html">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <h1>Enriching Wikidata:<br>Italian Renaissance Painters &amp; Their Museums</h1>
+    <p>A knowledge engineering project comparing two LLMs (Gemini and ChatGPT) as tools
+       for identifying and filling factual gaps in Wikidata.</p>
+    <span class="tag">Wikidata</span>
+    <span class="tag">SPARQL</span>
+    <span class="tag">LLM Prompting</span>
+    <span class="tag">RDF / Turtle</span>
+    <span class="tag">Knowledge Graphs</span>
+    <span class="tag">Italian Renaissance</span>
+  </div>
+
+  <h2>Project Overview</h2>
+  <p>
+    Wikidata is one of the world's largest open knowledge bases, yet even well-studied
+    domains like Italian Renaissance art contain systematic gaps. This project investigates
+    three specific missing properties for a set of painters active between 1400 and 1560:
+  </p>
+  <table>
+    <tr>
+      <th>Property</th><th>Meaning</th><th>Example gap found</th>
+    </tr>
+    <tr>
+      <td><code>P1066</code></td>
+      <td>student of (teacher)</td>
+      <td>Bernardino Luini (Q8537) — no teacher recorded</td>
+    </tr>
+    <tr>
+      <td><code>P195</code></td>
+      <td>collection (museum)</td>
+      <td>Baronci Altarpiece (Q1778000) — no institution linked</td>
+    </tr>
+    <tr>
+      <td><code>P135</code></td>
+      <td>movement</td>
+      <td>Boltraffio (Q442528), Luini (Q8537) — movement blank</td>
+    </tr>
+  </table>
+
+  <p>
+    We used SPARQL queries against the live Wikidata endpoint to discover these gaps
+    empirically, then applied three prompting techniques (zero-shot, few-shot,
+    chain-of-thought) to two large language models — Google Gemini and OpenAI ChatGPT —
+    to propose candidate values. Finally, we manually verified the suggestions and
+    generated corrected RDF triples in Turtle format.
+  </p>
+
+  <h2>Research Hypothesis</h2>
+  <p>
+    <em>Lesser-known painters in Leonardo da Vinci's Milanese circle are significantly
+    underrepresented in Wikidata: many lack teacher-student links (P1066) and art
+    movement assignments (P135). Chain-of-thought prompting elicits more accurate and
+    better-justified values from LLMs than zero-shot or few-shot prompting for
+    historically ambiguous cases.</em>
+  </p>
+
+  <h2>Team</h2>
+  <div class="team-grid">
+    <div class="team-card"><strong>[Name 1]</strong>University of Bologna</div>
+    <div class="team-card"><strong>[Name 2]</strong>University of Bologna</div>
+    <div class="team-card"><strong>[Name 3]</strong>University of Bologna</div>
+    <div class="team-card"><strong>[Name 4]</strong>University of Bologna</div>
+  </div>
+
+  <h2>Navigate the Project</h2>
+  <div class="quicklinks">
+    <a class="quicklink" href="methodology.html">
+      <strong>Methodology</strong>
+      <span>Research design, tools, data pipeline</span>
+    </a>
+    <a class="quicklink" href="sparql.html">
+      <strong>SPARQL &amp; Results</strong>
+      <span>4 queries, gap tables, real Wikidata results</span>
+    </a>
+    <a class="quicklink" href="prompts.html">
+      <strong>Prompts &amp; LLM Comparison</strong>
+      <span>9 prompts × 2 models — zero-shot, few-shot, CoT</span>
+    </a>
+    <a class="quicklink" href="rdf.html">
+      <strong>RDF Before / After</strong>
+      <span>LLM errors annotated → corrected Turtle triples</span>
+    </a>
+    <a class="quicklink" href="graph.html">
+      <strong>Knowledge Graph</strong>
+      <span>Interactive before/after visualisation</span>
+    </a>
+    <a class="quicklink" href="challenges.html">
+      <strong>Challenges</strong>
+      <span>Hallucinations, QID errors, scope limitations</span>
+    </a>
+    <a class="quicklink" href="conclusion.html">
+      <strong>Conclusion</strong>
+      <span>Findings, LLM comparison, future work</span>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+</body>
+</html>

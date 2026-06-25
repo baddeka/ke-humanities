@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompts &amp; LLM Comparison · Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <style>
+    .llm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .llm-box { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 1rem; }
+    .llm-box h4 { margin-bottom: 0.5rem; font-size: 0.9rem; font-family: sans-serif; color: #555; }
+    .llm-box .placeholder { color: #aaa; font-style: italic; font-size: 0.88rem; }
+    .technique-label { display: inline-block; background: #1a2744; color: #c9a84c;
+      font-family: monospace; font-size: 0.78rem; padding: 0.15rem 0.5rem;
+      border-radius: 3px; margin-bottom: 0.5rem; }
+    .gap-section { border: 1px solid #ddd; border-radius: 6px; margin: 2rem 0;
+      overflow: hidden; }
+    .gap-header { background: #1a2744; color: white; padding: 0.8rem 1.2rem;
+      font-family: sans-serif; font-size: 0.95rem; }
+    .gap-body { padding: 1.2rem; }
+    @media(max-width:600px){ .llm-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="sparql.html">SPARQL &amp; Results</a>
+  <a href="prompts.html" class="active">Prompts &amp; LLM</a>
+  <a href="rdf.html">RDF Before/After</a>
+  <a href="graph.html">Knowledge Graph</a>
+  <a href="challenges.html">Challenges</a>
+  <a href="conclusion.html">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="page-title">Prompts &amp; LLM Comparison</div>
+  <div class="page-desc">
+    Three gaps × three prompting techniques × two models (Gemini · ChatGPT) = 18 interactions.
+    LLM responses collected manually and inserted below.
+  </div>
+
+  <!-- ═══ GAP 1: P1066 ═══════════════════════════════════════════════ -->
+  <div class="gap-section">
+    <div class="gap-header">Gap 1 — P1066 (student of) — Bernardino Luini (Q8537)</div>
+    <div class="gap-body">
+
+      <h3><span class="technique-label">ZERO-SHOT</span> — Baseline factual recall</h3>
+      <p><em>Rationale:</em> Establishes what both models "know" about Luini's teacher without any contextual guidance. The expected answer is Leonardo da Vinci, but direct documentary evidence is limited.</p>
+<pre><code class="language-text">You are a Wikidata editor with expertise in Italian Renaissance art history.
+
+Item: Bernardino Luini (Q8537)
+Property to fill: P1066 (student of / teacher)
+Current value in Wikidata: NONE
+
+Who was the teacher of Bernardino Luini? Provide:
+1. The teacher's full name
+2. Their Wikidata Q-identifier (if you know it)
+3. Your confidence level (high / medium / low)
+4. A brief justification citing historical sources
+
+Important: Do not invent Q-identifiers. If unsure of the exact Q-ID, say so.</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box">
+          <h4>Gemini response:</h4>
+          <div class="placeholder">[paste Gemini response here]</div>
+        </div>
+        <div class="llm-box">
+          <h4>ChatGPT response:</h4>
+          <div class="placeholder">[paste ChatGPT response here]</div>
+        </div>
+      </div>
+
+      <h3><span class="technique-label">FEW-SHOT</span> — Guided by analogous cases</h3>
+      <p><em>Rationale:</em> Two confirmed examples from other Leonardo-school painters anchor the format and vocabulary. This should reduce string-literal errors and align the output with Wikidata conventions.</p>
+<pre><code class="language-text">EXAMPLE 1
+- Painter: Giovanni Antonio Boltraffio (Q442528)
+- P1066 (student of): Leonardo da Vinci (Q762)
+- Evidence: Mentioned in Codex Atlanticus as part of Leonardo's Milanese workshop.
+
+EXAMPLE 2
+- Painter: Filippino Lippi (Q296265)
+- P1066 (student of): Sandro Botticelli (Q5669)
+- Evidence: Vasari's Lives of the Artists names Botticelli as Filippino's master.
+
+NOW FILL IN:
+- Painter: Bernardino Luini (Q8537)
+- P1066 (student of): ???
+- Evidence: [cite historical source]
+- Wikidata Q-ID of suggested teacher: [Q-number or "unknown"]
+- Confidence: [high / medium / low]</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box">
+          <h4>Gemini response:</h4>
+          <div class="placeholder">[paste Gemini response here]</div>
+        </div>
+        <div class="llm-box">
+          <h4>ChatGPT response:</h4>
+          <div class="placeholder">[paste ChatGPT response here]</div>
+        </div>
+      </div>
+
+      <h3><span class="technique-label">CHAIN-OF-THOUGHT</span> — Step-by-step historical reasoning</h3>
+      <p><em>Rationale:</em> Luini's teacher is genuinely uncertain. CoT forces the model to surface its evidence at each step, making potential hallucinations visible and providing material for the "challenges" discussion.</p>
+<pre><code class="language-text">STEP 1 — Geographic and temporal context
+Where and when was Luini active? What workshops existed in that place?
+
+STEP 2 — Stylistic analysis
+Luini shows strong Leonardesque features (sfumato, facial typology). Does this
+imply direct study, or influence via secondary channels?
+
+STEP 3 — Documentary evidence
+Any primary sources naming Luini's teacher? (contracts, Vasari, workshop records?)
+
+STEP 4 — Candidate teachers (list top 2–3 with evidence)
+
+STEP 5 — Recommended Wikidata triple:
+  wd:Q8537 wdt:P1066 [???]
+  Confidence: high / medium / low</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box">
+          <h4>Gemini response:</h4>
+          <div class="placeholder">[paste Gemini response here]</div>
+        </div>
+        <div class="llm-box">
+          <h4>ChatGPT response:</h4>
+          <div class="placeholder">[paste ChatGPT response here]</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ GAP 2: P195 ════════════════════════════════════════════════ -->
+  <div class="gap-section">
+    <div class="gap-header">Gap 2 — P195 (collection) — Baronci Altarpiece / Raphael (Q1778000)</div>
+    <div class="gap-body">
+
+      <h3><span class="technique-label">ZERO-SHOT</span></h3>
+      <p><em>Rationale:</em> Tests whether models know that this work was fragmented in the 1799 earthquake and can name the holding institutions without guidance.</p>
+<pre><code class="language-text">Item: Baronci Altarpiece (Q1778000), Creator: Raphael (Q5597), c. 1501
+Property to fill: P195 (collection)
+Current value in Wikidata: NONE
+
+The Baronci Altarpiece was destroyed partly in 1799; fragments survive.
+List each surviving fragment with: (1) institution name, (2) Wikidata Q-ID,
+(3) confidence level (high / medium / low).</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box"><h4>Gemini:</h4><div class="placeholder">[paste here]</div></div>
+        <div class="llm-box"><h4>ChatGPT:</h4><div class="placeholder">[paste here]</div></div>
+      </div>
+
+      <h3><span class="technique-label">FEW-SHOT</span></h3>
+      <p><em>Rationale:</em> Shows that a painting can have multiple P195 values (one per fragment location), which is non-obvious to a model trained on single-institution cases.</p>
+<pre><code class="language-text">EXAMPLE (dispersed work): Isenheim Altarpiece — panels in Unterlinden Museum (Q683842),
+documentary material in Colmar Municipal Library.
+
+NOW FILL IN:
+- Artwork: Baronci Altarpiece (Q1778000)
+- For each surviving fragment: institution + Q-ID + confidence</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box"><h4>Gemini:</h4><div class="placeholder">[paste here]</div></div>
+        <div class="llm-box"><h4>ChatGPT:</h4><div class="placeholder">[paste here]</div></div>
+      </div>
+
+      <h3><span class="technique-label">CHAIN-OF-THOUGHT</span></h3>
+      <p><em>Rationale:</em> Provenance research is inherently sequential: commission → original location → damage event → dispersal → current holdings. CoT mirrors this process.</p>
+<pre><code class="language-text">STEP 1 — Original commission and location
+STEP 2 — Documented fate (damage/destruction event, date)
+STEP 3 — Identify surviving fragments (how many, what subjects?)
+STEP 4 — Current holdings per fragment (institution, Q-ID, source)
+STEP 5 — Proposed Wikidata triples (wd:Q1778000 wdt:P195 wd:[QID])
+STEP 6 — Confidence per triple</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box"><h4>Gemini:</h4><div class="placeholder">[paste here]</div></div>
+        <div class="llm-box"><h4>ChatGPT:</h4><div class="placeholder">[paste here]</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ GAP 3: P135 ════════════════════════════════════════════════ -->
+  <div class="gap-section">
+    <div class="gap-header">Gap 3 — P135 (movement) — Boltraffio (Q442528) + Luini (Q8537)</div>
+    <div class="gap-body">
+
+      <h3><span class="technique-label">ZERO-SHOT</span></h3>
+      <p><em>Rationale:</em> Movement classification is relatively unambiguous for painters trained directly under Leonardo. Tests whether models default to the correct granularity (Italian Renaissance vs. High Renaissance vs. Lombard school).</p>
+<pre><code class="language-text">Item: Giovanni Antonio Boltraffio (Q442528)
+Known: student of Leonardo da Vinci (P1066 = Q762)
+Property to fill: P135 (movement)
+Current value in Wikidata: NONE
+
+What art movement(s) should be assigned?
+Provide: movement name, Wikidata Q-ID, justification, confidence.</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box"><h4>Gemini:</h4><div class="placeholder">[paste here]</div></div>
+        <div class="llm-box"><h4>ChatGPT:</h4><div class="placeholder">[paste here]</div></div>
+      </div>
+
+      <h3><span class="technique-label">FEW-SHOT</span></h3>
+      <p><em>Rationale:</em> Three examples from the same period calibrate the model to Wikidata's movement vocabulary and show that regional sub-movements (e.g., "Sienese school") are valid values alongside broader terms.</p>
+<pre><code class="language-text">EXAMPLE 1: Leonardo da Vinci (Q762) → P135: High Renaissance (Q1474884)
+EXAMPLE 2: Domenico Ghirlandaio (Q191423) → P135: Italian Renaissance (Q1404472)
+EXAMPLE 3: Luca Signorelli (Q7031) → P135: Sienese school (regional sub-movement)
+
+NOW FILL IN:
+- Boltraffio (Q442528): P135 = ???
+- Luini (Q8537): P135 = ???</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box"><h4>Gemini:</h4><div class="placeholder">[paste here]</div></div>
+        <div class="llm-box"><h4>ChatGPT:</h4><div class="placeholder">[paste here]</div></div>
+      </div>
+
+      <h3><span class="technique-label">CHAIN-OF-THOUGHT</span></h3>
+      <p><em>Rationale:</em> CoT makes the classification criteria (period, geography, teacher, stylistic features) explicit and auditable — ideal for establishing an editorial template for similar future cases.</p>
+<pre><code class="language-text">STEP 1 — Historical period of Boltraffio's activity
+STEP 2 — Geographic school (where did he work?)
+STEP 3 — Teacher influence: what movement is Leonardo associated with in Wikidata?
+STEP 4 — Stylistic characteristics of Boltraffio's known works
+STEP 5 — Best candidate from: Q4692 Renaissance / Q1474884 High Renaissance /
+           Q1404472 Italian Renaissance / other
+STEP 6 — Final triple: wd:Q442528 wdt:P135 wd:[QID]  Confidence: high/medium/low</code></pre>
+      <div class="llm-grid">
+        <div class="llm-box"><h4>Gemini:</h4><div class="placeholder">[paste here]</div></div>
+        <div class="llm-box"><h4>ChatGPT:</h4><div class="placeholder">[paste here]</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ COMPARISON TABLE ════════════════════════════════════════════ -->
+  <h2>LLM Comparison Table</h2>
+  <div class="callout warn">Fill in after collecting all responses from Gemini and ChatGPT.</div>
+  <table>
+    <tr>
+      <th>Gap</th><th>Technique</th>
+      <th>Gemini — accuracy</th><th>Gemini — Q-ID valid?</th>
+      <th>ChatGPT — accuracy</th><th>ChatGPT — Q-ID valid?</th>
+    </tr>
+    <tr><td>P1066 Luini</td><td>Zero-shot</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P1066 Luini</td><td>Few-shot</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P1066 Luini</td><td>CoT</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P195 Baronci</td><td>Zero-shot</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P195 Baronci</td><td>Few-shot</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P195 Baronci</td><td>CoT</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P135 Boltraffio</td><td>Zero-shot</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P135 Boltraffio</td><td>Few-shot</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+    <tr><td>P135 Boltraffio</td><td>CoT</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td><td>[TBD]</td></tr>
+  </table>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

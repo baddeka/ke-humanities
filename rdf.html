@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RDF Before/After · Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <style>
+    .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 1rem 0; }
+    .diff-grid pre { margin: 0; }
+    .diff-label { font-family: sans-serif; font-size: 0.8rem; font-weight: bold;
+      padding: 0.4rem 0.8rem; border-radius: 4px 4px 0 0; display: block; }
+    .diff-label.wrong { background: #c0392b; color: white; }
+    .diff-label.ok    { background: #27ae60; color: white; }
+    .error-list { counter-reset: err; }
+    .error-list li { counter-increment: err; margin-bottom: 0.8rem; }
+    .error-list li::before { content: "Error " counter(err) ": ";
+      font-weight: bold; color: #c0392b; }
+    @media(max-width:640px){ .diff-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="sparql.html">SPARQL &amp; Results</a>
+  <a href="prompts.html">Prompts &amp; LLM</a>
+  <a href="rdf.html" class="active">RDF Before/After</a>
+  <a href="graph.html">Knowledge Graph</a>
+  <a href="challenges.html">Challenges</a>
+  <a href="conclusion.html">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="page-title">RDF — Before &amp; After</div>
+  <div class="page-desc">
+    Initial (erroneous) LLM output vs. manually corrected Turtle triples.
+    This comparison is the core methodological contribution of the project:
+    it demonstrates where LLMs fail when generating knowledge graph data.
+  </div>
+
+  <div class="callout info">
+    <strong>Format:</strong> All triples use
+    <a href="https://www.w3.org/TR/turtle/">Turtle (TTL)</a> serialisation with
+    standard Wikidata prefixes. Verified Q-IDs come from live SPARQL queries — none are assumed.
+  </div>
+
+  <h2>Prefix Declarations</h2>
+  <pre><code class="language-turtle">@prefix wd:   &lt;http://www.wikidata.org/entity/&gt; .
+@prefix wdt:  &lt;http://www.wikidata.org/prop/direct/&gt; .
+@prefix p:    &lt;http://www.wikidata.org/prop/&gt; .
+@prefix ps:   &lt;http://www.wikidata.org/prop/statement/&gt; .
+@prefix pq:   &lt;http://www.wikidata.org/prop/qualifier/&gt; .
+@prefix xsd:  &lt;http://www.w3.org/2001/XMLSchema#&gt; .
+@prefix rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt; .</code></pre>
+
+  <!-- ═══ GAP 1: P1066 ═════════════════════════════════════════════════ -->
+  <h2>Gap 1 — P1066 (student of): Bernardino Luini</h2>
+
+  <div class="diff-grid">
+    <div>
+      <span class="diff-label wrong">✗ Initial LLM output (errors)</span>
+      <pre><code class="language-turtle"># Error 1: plain string instead of entity URI
+wd:Q8537 wdt:P1066 "Leonardo da Vinci" .
+
+# Error 4: reversed subject/object
+wd:Q762 wdt:P1066 wd:Q8537 .
+# → reads "Leonardo was student of Luini"</code></pre>
+    </div>
+    <div>
+      <span class="diff-label ok">✓ Corrected triple</span>
+      <pre><code class="language-turtle"># Luini (Q8537) student of Leonardo (Q762)
+# Confidence: MEDIUM — stylistic evidence strong,
+# documentary proof limited.
+wd:Q8537 wdt:P1066 wd:Q762 .</code></pre>
+    </div>
+  </div>
+
+  <ol class="error-list">
+    <li><strong>String literal instead of entity URI.</strong> The model wrote
+      <code>"Leonardo da Vinci"</code> (a plain text string). In Wikidata RDF, property
+      values that refer to other items must be entity URIs: <code>wd:Q762</code>.</li>
+    <li><strong>Reversed relationship direction.</strong> The model wrote
+      <code>wd:Q762 wdt:P1066 wd:Q8537</code>, which means
+      "Leonardo da Vinci was a student of Bernardino Luini" — the exact opposite of the
+      intended fact. <code>P1066</code> (student of) must have the <em>student</em> as
+      subject and the <em>teacher</em> as object.</li>
+  </ol>
+
+  <!-- ═══ GAP 3: P135 ═════════════════════════════════════════════════ -->
+  <h2>Gap 3 — P135 (movement): Boltraffio &amp; Luini</h2>
+
+  <div class="diff-grid">
+    <div>
+      <span class="diff-label wrong">✗ Initial LLM output (errors)</span>
+      <pre><code class="language-turtle"># Error 2: wrong property ID (P136 = genre, not P135)
+wd:Q8537 wdt:P136 wd:Q1404472 .
+
+# Error 3: invented / hallucinated Q-ID
+wd:Q442528 wdt:P135 wd:Q998877 .
+# Q998877 does not exist in Wikidata
+
+# Error 8: completely wrong Q-ID (Q11635 = theatre)
+wd:Q280851 wdt:P135 wd:Q11635 .</code></pre>
+    </div>
+    <div>
+      <span class="diff-label ok">✓ Corrected triples</span>
+      <pre><code class="language-turtle"># Verified: Q1404472 = Italian Renaissance
+#           Q1474884 = High Renaissance
+
+wd:Q442528 wdt:P135 wd:Q1404472 .  # Boltraffio
+wd:Q442528 wdt:P135 wd:Q1474884 .  # also High Renaissance
+
+wd:Q8537   wdt:P135 wd:Q1404472 .  # Luini
+
+wd:Q280851 wdt:P135 wd:Q1404472 .  # Piero di Cosimo</code></pre>
+    </div>
+  </div>
+
+  <ol class="error-list" start="3">
+    <li><strong>Wrong property ID: P136 instead of P135.</strong>
+      <code>P136</code> is "genre" (used for literary/musical genres);
+      <code>P135</code> is "movement" (used for art movements). One digit difference,
+      entirely different meaning. The model consistently confused these two.</li>
+    <li><strong>Hallucinated Q-ID.</strong> The model produced <code>Q998877</code> for
+      "Italian Renaissance". This Q-ID does not exist in Wikidata. The correct identifier,
+      found via SPARQL lookup on the label "Italian Renaissance", is <code>Q1404472</code>.</li>
+    <li><strong>Semantically wrong Q-ID.</strong> For Piero di Cosimo, the model assigned
+      <code>Q11635</code>, which resolves to "theatre" — a completely unrelated concept.
+      This is a case of superficial pattern matching without entity disambiguation.</li>
+  </ol>
+
+  <!-- ═══ GAP 2: P195 ═════════════════════════════════════════════════ -->
+  <h2>Gap 2 — P195 (collection): Baronci Altarpiece</h2>
+
+  <div class="diff-grid">
+    <div>
+      <span class="diff-label wrong">✗ Initial LLM output (errors)</span>
+      <pre><code class="language-turtle"># Error 5: wrong property — P131 = admin location
+wd:Q1778000 wdt:P131 wd:Q1524 .
+
+# Error 6: museum as string literal
+wd:Q1778000 wdt:P195 "Pinacoteca Vaticana" .
+
+# Error 9: missing prefix declarations,
+# then using p:/ps:/pq: without declaring them
+wd:Q1778000 p:P195 [
+    ps:P195 wd:Q46699 ;
+    pq:P518 wd:Q1493045
+] .
+# → parse error: prefixes p:, ps:, pq: undeclared</code></pre>
+    </div>
+    <div>
+      <span class="diff-label ok">✓ Corrected triples</span>
+      <pre><code class="language-turtle"># Prefixes declared at file top (see above).
+# Full statement structure used for qualifiers.
+
+wd:Q1778000 p:P195 [
+    ps:P195 wd:Q46699 ;
+    pq:P518 "God the Father with Angels"^^xsd:string
+] .
+
+wd:Q1778000 p:P195 [
+    ps:P195 wd:Q511959 ;
+    pq:P518 "Angel fragment"^^xsd:string
+] .
+
+# NOTE: Verify Q46699 (Pinacoteca Vaticana)
+# and Q511959 (Pinacoteca Tosio Martinengo)
+# against museum catalogues before submitting.</code></pre>
+    </div>
+  </div>
+
+  <ol class="error-list" start="6">
+    <li><strong>Wrong property for museum: P131 vs P195.</strong>
+      <code>P131</code> ("located in administrative territorial entity") links an item to
+      a city or region; <code>P195</code> ("collection") links an artwork to the institution
+      that holds it. The model confused geographic location with institutional holding.</li>
+    <li><strong>String literal for museum name.</strong>
+      <code>"Pinacoteca Vaticana"</code> is a text string, not a Wikidata entity.
+      The correct form is <code>wd:Q46699</code> — the entity representing that museum.</li>
+    <li><strong>Missing prefix declarations causing parse errors.</strong>
+      The model used <code>p:</code>, <code>ps:</code>, and <code>pq:</code> prefixes
+      for full statement structure without declaring them at the top of the document.
+      Any Turtle parser would reject this file.</li>
+  </ol>
+
+  <h2>Summary of All 9 Errors</h2>
+  <table>
+    <tr><th>#</th><th>Error type</th><th>Example</th><th>Fix</th></tr>
+    <tr><td>1</td><td>String instead of URI</td><td><code>"Leonardo da Vinci"</code></td><td><code>wd:Q762</code></td></tr>
+    <tr><td>2</td><td>Reversed subject/object</td><td><code>wd:Q762 P1066 wd:Q8537</code></td><td>Swap subject &amp; object</td></tr>
+    <tr><td>3</td><td>Wrong property ID</td><td><code>wdt:P136</code> (genre)</td><td><code>wdt:P135</code> (movement)</td></tr>
+    <tr><td>4</td><td>Hallucinated Q-ID</td><td><code>wd:Q998877</code> (non-existent)</td><td><code>wd:Q1404472</code></td></tr>
+    <tr><td>5</td><td>Semantically wrong entity</td><td><code>wd:Q11635</code> = theatre</td><td><code>wd:Q1404472</code></td></tr>
+    <tr><td>6</td><td>Wrong property for museum</td><td><code>wdt:P131</code> (location)</td><td><code>wdt:P195</code> (collection)</td></tr>
+    <tr><td>7</td><td>Museum as string literal</td><td><code>"Pinacoteca Vaticana"</code></td><td><code>wd:Q46699</code></td></tr>
+    <tr><td>8</td><td>Irrelevant rdfs:label statement</td><td>Adds existing label as fact</td><td>Remove entirely</td></tr>
+    <tr><td>9</td><td>Missing prefix declarations</td><td><code>p:</code>, <code>ps:</code>, <code>pq:</code> undeclared</td><td>Add all @prefix lines at top</td></tr>
+  </table>
+
+  <div class="callout">
+    <strong>Key lesson:</strong> LLMs produce syntactically plausible-looking RDF that fails
+    on semantic grounds — wrong Q-IDs, inverted relationships, wrong property numbers.
+    Every LLM-generated triple must be verified against the live knowledge base before use.
+  </div>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

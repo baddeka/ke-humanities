@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Methodology · Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="methodology.html" class="active">Methodology</a>
+  <a href="sparql.html">SPARQL &amp; Results</a>
+  <a href="prompts.html">Prompts &amp; LLM</a>
+  <a href="rdf.html">RDF Before/After</a>
+  <a href="graph.html">Knowledge Graph</a>
+  <a href="challenges.html">Challenges</a>
+  <a href="conclusion.html">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="page-title">Methodology</div>
+  <div class="page-desc">Research design, data pipeline, and tools used in this project</div>
+
+  <h2>1. Research Question</h2>
+  <p>
+    Can large language models (LLMs) reliably propose missing Wikidata values for
+    Italian Renaissance painters? Specifically, we focus on three structurally
+    important properties: <code>P1066</code> (teacher), <code>P195</code> (collection),
+    and <code>P135</code> (art movement). We compare the accuracy and justification
+    quality of Google Gemini and OpenAI ChatGPT across three prompting strategies.
+  </p>
+
+  <h2>2. Data Pipeline</h2>
+
+  <p>The project follows a five-stage pipeline:</p>
+
+  <table>
+    <tr><th>Stage</th><th>Action</th><th>Tool / Output</th></tr>
+    <tr>
+      <td><strong>1. Gap Discovery</strong></td>
+      <td>SPARQL queries identify painters and artworks missing key properties</td>
+      <td>Wikidata endpoint → <code>sparql/*.rq</code></td>
+    </tr>
+    <tr>
+      <td><strong>2. Prompting</strong></td>
+      <td>Three techniques (zero-shot, few-shot, CoT) applied to 3 gaps × 2 LLMs</td>
+      <td>Gemini API / ChatGPT → <code>prompts/*.md</code></td>
+    </tr>
+    <tr>
+      <td><strong>3. Verification</strong></td>
+      <td>Each LLM suggestion checked: Q-IDs verified via SPARQL, facts against sources</td>
+      <td>Wikidata SPARQL, scholarly sources</td>
+    </tr>
+    <tr>
+      <td><strong>4. RDF Generation</strong></td>
+      <td>Validated facts expressed as Turtle triples with correct prefixes</td>
+      <td><code>rdf/corrected.ttl</code></td>
+    </tr>
+    <tr>
+      <td><strong>5. Analysis</strong></td>
+      <td>Compare LLM outputs: accuracy, hallucination rate, format compliance</td>
+      <td>Report + this website</td>
+    </tr>
+  </table>
+
+  <h2>3. Knowledge Base: Wikidata</h2>
+  <p>
+    Wikidata (wikidata.org) is a collaborative, multilingual knowledge base maintained
+    by the Wikimedia Foundation. It uses a graph model where:
+  </p>
+  <ul>
+    <li><strong>Items</strong> (Q-numbers) represent entities: people, places, concepts.</li>
+    <li><strong>Properties</strong> (P-numbers) represent relationships and attributes.</li>
+    <li><strong>Statements</strong> link items via properties, optionally with qualifiers and references.</li>
+  </ul>
+  <p>
+    We query Wikidata via its public SPARQL endpoint at
+    <code>https://query.wikidata.org/sparql</code> using the SPARQL 1.1 query language.
+    All data is available under the Creative Commons CC0 licence.
+  </p>
+
+  <h2>4. Target Dataset</h2>
+  <p>
+    We begin with five canonical Italian Renaissance masters and extend the dataset
+    with ten lesser-known painters — particularly members of Leonardo's Milanese circle —
+    where gaps are more prevalent:
+  </p>
+  <table>
+    <tr><th>QID</th><th>Painter</th><th>Active</th><th>School</th></tr>
+    <tr><td>Q762</td><td>Leonardo da Vinci</td><td>Florence / Milan, 1478–1519</td><td>Florentine / Lombard</td></tr>
+    <tr><td>Q5592</td><td>Michelangelo</td><td>Florence / Rome, 1488–1564</td><td>Florentine</td></tr>
+    <tr><td>Q5597</td><td>Raphael</td><td>Urbino / Rome, 1500–1520</td><td>Central Italian</td></tr>
+    <tr><td>Q5669</td><td>Sandro Botticelli</td><td>Florence, 1464–1510</td><td>Florentine</td></tr>
+    <tr><td>Q47551</td><td>Titian</td><td>Venice, 1508–1576</td><td>Venetian</td></tr>
+    <tr><td>Q8537</td><td>Bernardino Luini <span class="badge-gap">GAP</span></td><td>Milan, c.1500–1532</td><td>Lombard</td></tr>
+    <tr><td>Q442528</td><td>Giovanni A. Boltraffio <span class="badge-gap">GAP</span></td><td>Milan, c.1490–1516</td><td>Lombard</td></tr>
+    <tr><td>Q280851</td><td>Piero di Cosimo <span class="badge-gap">GAP</span></td><td>Florence, c.1480–1522</td><td>Florentine</td></tr>
+    <tr><td>Q5827</td><td>Pietro Perugino</td><td>Umbria / Florence, 1472–1523</td><td>Umbrian</td></tr>
+    <tr><td>Q5591</td><td>Pinturicchio</td><td>Umbria / Rome, 1481–1513</td><td>Umbrian</td></tr>
+    <tr><td>Q7031</td><td>Luca Signorelli</td><td>Tuscany / Umbria, 1470–1523</td><td>Sienese</td></tr>
+    <tr><td>Q191423</td><td>Domenico Ghirlandaio</td><td>Florence, 1465–1494</td><td>Florentine</td></tr>
+  </table>
+
+  <h2>5. Prompting Techniques</h2>
+
+  <h3>Zero-shot</h3>
+  <p>
+    The model is asked directly to fill a gap with no prior examples. This tests the
+    model's baseline factual recall. It is the fastest technique but most prone to
+    confident hallucination when the answer is ambiguous.
+  </p>
+
+  <h3>Few-shot</h3>
+  <p>
+    Two or three confirmed examples from similar painters are provided before posing
+    the target question. This aligns the model's output format with Wikidata conventions
+    and anchors its reasoning in known cases.
+  </p>
+
+  <h3>Chain-of-Thought (CoT)</h3>
+  <p>
+    The model is asked to reason step-by-step through geographic context, stylistic
+    evidence, documentary sources, and candidate values before committing to a final
+    triple. This technique is particularly valuable for historically uncertain cases
+    (such as Luini's teacher), where explicit reasoning steps can be checked by
+    domain experts.
+  </p>
+
+  <h2>6. Evaluation Criteria</h2>
+  <table>
+    <tr><th>Criterion</th><th>Description</th></tr>
+    <tr><td><strong>Factual accuracy</strong></td><td>Does the proposed value match verifiable historical sources?</td></tr>
+    <tr><td><strong>Q-ID validity</strong></td><td>Does the suggested Q-ID actually resolve in Wikidata to the intended entity?</td></tr>
+    <tr><td><strong>Format compliance</strong></td><td>Does the output use entity references rather than string literals?</td></tr>
+    <tr><td><strong>Justification quality</strong></td><td>Does the model cite a source, or does it assert without evidence?</td></tr>
+    <tr><td><strong>Uncertainty acknowledgement</strong></td><td>Does the model admit when an answer is contested or unknown?</td></tr>
+  </table>
+
+  <h2>7. Tools &amp; Technologies</h2>
+  <ul>
+    <li><strong>SPARQL 1.1</strong> — gap discovery queries against Wikidata</li>
+    <li><strong>curl</strong> — HTTP client for querying the Wikidata endpoint</li>
+    <li><strong>Turtle (TTL)</strong> — RDF serialisation format for knowledge graph triples</li>
+    <li><strong>Google Gemini</strong> — LLM 1 (version noted per query)</li>
+    <li><strong>OpenAI ChatGPT</strong> — LLM 2 (version noted per query)</li>
+    <li><strong>vis-network</strong> — JavaScript library for knowledge graph visualisation</li>
+    <li><strong>GitHub Pages</strong> — static site hosting</li>
+  </ul>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+</body>
+</html>

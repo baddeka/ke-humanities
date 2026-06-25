@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenges · Italian Renaissance Painters</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="site-title">Enriching Wikidata on Italian Renaissance Painters</div>
+  <div class="site-subtitle">Knowledge Engineering for the Humanities · University of Bologna · A.Y. 2024/25</div>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="sparql.html">SPARQL &amp; Results</a>
+  <a href="prompts.html">Prompts &amp; LLM</a>
+  <a href="rdf.html">RDF Before/After</a>
+  <a href="graph.html">Knowledge Graph</a>
+  <a href="challenges.html" class="active">Challenges</a>
+  <a href="conclusion.html">Conclusion</a>
+</nav>
+
+<main>
+
+  <div class="page-title">Challenges &amp; Limitations</div>
+  <div class="page-desc">
+    Problems encountered across all project phases, from SPARQL querying to
+    RDF generation to LLM evaluation.
+  </div>
+
+  <h2>1. Wikidata Data Model Surprises</h2>
+
+  <h3>Citizenship vs. birth country</h3>
+  <p>
+    Several painters active in Renaissance Italy are not recorded as Italian citizens
+    in Wikidata. Bernardino Luini (Q8537) is a key example: he was born in Luino,
+    a town that now falls in the Swiss canton of Ticino, and Wikidata records his
+    citizenship accordingly. Our initial Q3 query filtered by <code>wdt:P27 wd:Q38</code>
+    (citizen of Italy) and returned zero results for him. We resolved this with a UNION
+    clause covering birth in a place whose country is Italy, but the episode highlights
+    that "Italian Renaissance painter" is an art-historical category that does not map
+    cleanly onto Wikidata's political data model.
+  </p>
+
+  <h3>Q-ID collisions and wrong assumptions</h3>
+  <p>
+    Several Q-IDs assumed from prior knowledge turned out to be wrong. For instance,
+    Q379948 was assumed to be Bernardino Luini based on common-knowledge lookups;
+    in Wikidata it resolves to "San Pellegrino Pass" (a mountain pass). The correct
+    Q-ID for Luini is Q8537. Similarly, Q530246 (assumed Boltraffio) resolved to
+    "Yo-yo" and Q273840 (assumed Pinturicchio) resolved to an unrelated person.
+    <strong>Lesson:</strong> never assume Q-IDs; always verify via SPARQL or the
+    Wikidata search API before using them in queries or triples.
+  </p>
+
+  <h3>Multiple values for the same property</h3>
+  <p>
+    Wikidata allows — and in many cases requires — multiple values for the same property.
+    Painters such as Domenico Ghirlandaio have two teachers listed under P1066.
+    Paintings can have multiple P195 values when fragments are held by different institutions.
+    Our SPARQL results included duplicate rows (one per teacher, one per movement) that
+    required deduplication in post-processing.
+  </p>
+
+  <h2>2. LLM Hallucinations</h2>
+
+  <h3>Invented Q-IDs</h3>
+  <p>
+    Both models produced plausible-sounding but non-existent Wikidata identifiers.
+    The most dangerous class of error: the Q-ID looks syntactically valid (e.g.,
+    <code>wd:Q998877</code>) and could be silently accepted by a human reviewer
+    in a hurry. Every Q-ID must be checked against the live endpoint.
+  </p>
+
+  <h3>Wrong property IDs</h3>
+  <p>
+    P135 (movement) and P136 (genre) are adjacent property numbers. Both models
+    confused them in at least one response. P21 (sex/gender) was used instead of
+    P27 (citizenship) in another case. One-digit errors in property IDs produce
+    statements that are syntactically well-formed but semantically wrong — and
+    therefore hard to catch without knowing the property vocabulary.
+  </p>
+
+  <h3>Overconfidence on uncertain facts</h3>
+  <p>
+    The zero-shot prompt about Luini's teacher typically received a confident "Leonardo
+    da Vinci" with a high confidence rating. In reality, the art-historical record is
+    less clear: Luini was in Leonardo's circle and shows strong Leonardesque influence,
+    but direct documentation of an apprenticeship relationship is lacking. Chain-of-thought
+    prompting was better at surfacing this uncertainty.
+  </p>
+
+  <h2>3. Historical Ambiguity</h2>
+
+  <h3>Teacher-student relationships in Renaissance workshops</h3>
+  <p>
+    Renaissance workshops did not operate like modern schools. A painter might work
+    alongside a master (bottega), copy their style, and be strongly influenced
+    without being a formal apprentice. The Wikidata property P1066 ("student of")
+    conflates formal apprenticeship with informal influence. For painters like Luini,
+    who absorbed Leonardo's style but may not have trained formally under him, any
+    P1066 value requires a qualifier explaining the nature of the relationship.
+  </p>
+
+  <h3>Dispersed and fragmented artworks</h3>
+  <p>
+    The Baronci Altarpiece (Q1778000) was partly destroyed in an earthquake and its
+    surviving fragments are distributed across multiple institutions. Wikidata can
+    express this with multiple P195 values, each optionally qualified with P518
+    (applies to part). However, the exact provenance of each fragment remains contested
+    in the scholarly literature, making it impossible to add P195 values with high
+    confidence without museum-level archival research.
+  </p>
+
+  <h2>4. SPARQL Query Engineering</h2>
+
+  <h3>Timeout and endpoint limits</h3>
+  <p>
+    The Wikidata SPARQL endpoint enforces a 60-second query timeout. Complex queries
+    combining multiple OPTIONAL clauses, SERVICE wikibase:label blocks, and UNION
+    patterns risk timeout. We mitigated this with LIMIT clauses and by splitting
+    complex queries into focused sub-queries.
+  </p>
+
+  <h3>SSL certificate revocation on Windows</h3>
+  <p>
+    Executing SPARQL queries via <code>curl</code> on Windows failed initially with
+    error <code>CRYPT_E_REVOCATION_OFFLINE</code> — the system could not check
+    certificate revocation status offline. The workaround was adding
+    <code>--ssl-no-revoke</code> to all curl calls. This is acceptable in a controlled
+    academic environment but would need proper certificate management in production.
+  </p>
+
+  <h2>5. Scope Limitations</h2>
+  <p>
+    This project covers three properties (P1066, P195, P135) and twelve painters.
+    Wikidata contains thousands of Italian Renaissance painters and tens of thousands
+    of artworks. The gap analysis presented here is a sample, not a complete audit.
+    Systematic enrichment would require automated pipelines combining SPARQL-based
+    gap detection with LLM suggestion and human expert review — a larger-scale
+    knowledge engineering effort beyond the scope of a student project.
+  </p>
+
+  <div class="callout">
+    <strong>For the oral defence:</strong> The two most discussion-worthy challenges are
+    (1) the Q-ID verification problem — LLMs produce confident-looking identifiers that
+    require systematic SPARQL verification — and (2) the historical ambiguity of
+    teacher-student relationships in Renaissance workshops, which shows that
+    P1066 is not a simple factual gap but a modelling decision.
+  </div>
+
+</main>
+
+<footer>
+  Knowledge Engineering for the Humanities · University of Bologna · Valentina Presutti ·
+  Data from <a href="https://www.wikidata.org">Wikidata</a> (CC0) · 2025
+</footer>
+
+</body>
+</html>
